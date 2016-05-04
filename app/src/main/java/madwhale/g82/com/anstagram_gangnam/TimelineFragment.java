@@ -20,8 +20,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import madwhale.g82.com.anstagram_gangnam.apis.Api;
-import okhttp3.Call;
-import okhttp3.Callback;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -82,16 +80,18 @@ public class TimelineFragment extends Fragment {
                     Api.PostModel[] posts = gson.fromJson(response.body().charStream(), Api.PostModel[].class);
                     return posts;
                 }
+                else return null;
             } catch (IOException e) {
                 e.printStackTrace();
                 return null;
             }
-            return null;
         }
 
         @Override
         protected void onPostExecute(Api.PostModel[] postModels) {
             super.onPostExecute(postModels);
+
+            if (postModels == null) return;
 
             for (Api.PostModel post : postModels) {
                 listPosts.add(post);
