@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,9 +14,16 @@ import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 
+import java.io.IOException;
 import java.util.ArrayList;
 
+import madwhale.g82.com.anstagram_gangnam.apis.Api;
 import madwhale.g82.com.anstagram_gangnam.data.DataPostItem;
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 
 
 /**
@@ -33,17 +41,7 @@ public class TimelineFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
-        // MakeData
-        arrayList = new ArrayList<>();
-        DataPostItem item = new DataPostItem(0,
-                "http://res.heraldm.com/content/image/2015/12/15/20151215000161_0.jpg",
-                "불꽃놀이했어요~", "ansta_", 1234, false);
-        arrayList.add(item);
-        arrayList.add(new DataPostItem(1, "http://fimg3.pann.com/new/download.jsp?FileKey=DEE066DFF33E3701F8AD3940B201F711",
-                "하이!", "g82", 200000, false));
-
-        arrayList.add(new DataPostItem(2, "http://news20.busan.com/content/image/2015/09/13/20150913000163_0.jpg",
-                "하ggggg이!", "g82", 200000, false));
+        fetchTimelineDatas();
 
         // Inflate the layout for this fragment
         View baseView = inflater.inflate(R.layout.fragment_timeline, container, false);
@@ -52,6 +50,41 @@ public class TimelineFragment extends Fragment {
         recyclerView.setAdapter(new PostViewAdapter());
 
         return baseView;
+    }
+
+    private void fetchTimelineDatas() {
+
+        OkHttpClient client =new OkHttpClient();
+
+        Request request = new Request.Builder()
+                .url(Api.GET_POST)
+                .build();
+
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                e.printStackTrace();
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                if (response.code() == 200) {
+                    Log.d("fetchTimeline", response.body().string());
+                }
+            }
+        });
+
+        arrayList = new ArrayList<>();
+
+        /*DataPostItem item = new DataPostItem(0,
+                "http://res.heraldm.com/content/image/2015/12/15/20151215000161_0.jpg",
+                "불꽃놀이했어요~", "ansta_", 1234, false);
+        arrayList.add(item);
+        arrayList.add(new DataPostItem(1, "http://fimg3.pann.com/new/download.jsp?FileKey=DEE066DFF33E3701F8AD3940B201F711",
+                "하이!", "g82", 200000, false));
+
+        arrayList.add(new DataPostItem(2, "http://news20.busan.com/content/image/2015/09/13/20150913000163_0.jpg",
+                "하ggggg이!", "g82", 200000, false));*/
     }
 
     class PostViewAdapter extends RecyclerView.Adapter<PostViewHolder> {
