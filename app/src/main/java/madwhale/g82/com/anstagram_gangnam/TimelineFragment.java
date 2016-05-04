@@ -1,11 +1,11 @@
 package madwhale.g82.com.anstagram_gangnam;
 
 
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,12 +13,13 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
+import com.google.gson.Gson;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 import madwhale.g82.com.anstagram_gangnam.apis.Api;
-import madwhale.g82.com.anstagram_gangnam.data.DataPostItem;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.OkHttpClient;
@@ -31,7 +32,8 @@ import okhttp3.Response;
  */
 public class TimelineFragment extends Fragment {
 
-    ArrayList<DataPostItem> arrayList;
+    List<Api.PostModel> listPosts;
+    PostViewAdapter postViewAdapter;
 
     public TimelineFragment() {
         // Required empty public constructor
@@ -41,50 +43,61 @@ public class TimelineFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
-        fetchTimelineDatas();
+        listPosts = new ArrayList<>();
+
+        asyncFetchPosts();
 
         // Inflate the layout for this fragment
         View baseView = inflater.inflate(R.layout.fragment_timeline, container, false);
         RecyclerView recyclerView = (RecyclerView) baseView.findViewById(R.id.rv_list);
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity(), LinearLayoutManager.VERTICAL, false));
-        recyclerView.setAdapter(new PostViewAdapter());
+
+        postViewAdapter = new PostViewAdapter();
+        recyclerView.setAdapter(postViewAdapter);
 
         return baseView;
     }
 
-    private void fetchTimelineDatas() {
+    private void asyncFetchPosts() {
+        FetchPostTask fetchPostTask = new FetchPostTask();
+        fetchPostTask.execute(Api.GET_POST);
+    }
 
-        OkHttpClient client =new OkHttpClient();
+    class FetchPostTask extends AsyncTask<String, Void, Api.PostModel[]> {
 
-        Request request = new Request.Builder()
-                .url(Api.GET_POST)
-                .build();
+        @Override
+        protected Api.PostModel[] doInBackground(String... urls) {
 
-        client.newCall(request).enqueue(new Callback() {
-            @Override
-            public void onFailure(Call call, IOException e) {
-                e.printStackTrace();
-            }
+            OkHttpClient client = new OkHttpClient();
 
-            @Override
-            public void onResponse(Call call, Response response) throws IOException {
+            Request request = new Request.Builder()
+                    .url(urls[0])
+                    .build();
+
+            try {
+                Response response = client.newCall(request).execute();
+
                 if (response.code() == 200) {
-                    Log.d("fetchTimeline", response.body().string());
+                    Gson gson = new Gson();
+                    Api.PostModel[] posts = gson.fromJson(response.body().charStream(), Api.PostModel[].class);
+                    return posts;
                 }
+            } catch (IOException e) {
+                e.printStackTrace();
+                return null;
             }
-        });
+            return null;
+        }
 
-        arrayList = new ArrayList<>();
+        @Override
+        protected void onPostExecute(Api.PostModel[] postModels) {
+            super.onPostExecute(postModels);
 
-        /*DataPostItem item = new DataPostItem(0,
-                "http://res.heraldm.com/content/image/2015/12/15/20151215000161_0.jpg",
-                "불꽃놀이했어요~", "ansta_", 1234, false);
-        arrayList.add(item);
-        arrayList.add(new DataPostItem(1, "http://fimg3.pann.com/new/download.jsp?FileKey=DEE066DFF33E3701F8AD3940B201F711",
-                "하이!", "g82", 200000, false));
-
-        arrayList.add(new DataPostItem(2, "http://news20.busan.com/content/image/2015/09/13/20150913000163_0.jpg",
-                "하ggggg이!", "g82", 200000, false));*/
+            for (Api.PostModel post : postModels) {
+                listPosts.add(post);
+            }
+            postViewAdapter.notifyDataSetChanged();
+        }
     }
 
     class PostViewAdapter extends RecyclerView.Adapter<PostViewHolder> {
@@ -99,9 +112,9 @@ public class TimelineFragment extends Fragment {
         @Override
         public void onBindViewHolder(PostViewHolder holder, int position) {
 
-            DataPostItem item = arrayList.get(position);
+            Api.PostModel post = listPosts.get(position);
 
-            String url = item.getPostImgUrl();
+            String url = Api.BASE_URL + post.getImage().getUrl();
 
             Glide.with(TimelineFragment.this)
                     .load(url)
@@ -109,14 +122,14 @@ public class TimelineFragment extends Fragment {
                     .crossFade()
                     .into(holder.iv_post);
 
-            holder.tv_username.setText(item.getUserName());
-            holder.tv_posttext.setText(item.getPostText());
-            holder.tv_postlikecount.setText( String.valueOf( item.getPost_likes_count() ) );
+            holder.tv_username.setText(post.getUploader());
+            holder.tv_posttext.setText(post.getText());
+            holder.tv_postlikecount.setText( String.valueOf( post.getLikes() ) );
         }
 
         @Override
         public int getItemCount() {
-            return arrayList.size();
+            return listPosts.size();
         }
     }
 
