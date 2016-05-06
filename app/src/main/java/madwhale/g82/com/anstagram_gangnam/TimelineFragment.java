@@ -115,7 +115,7 @@ public class TimelineFragment extends Fragment {
             String url = item.getImage().getUrl();
 
             Glide.with(TimelineFragment.this)
-                    .load(Api.BASE_URL + url)
+                    .load(url)
                     .centerCrop()
                     .crossFade()
                     .into(holder.iv_post);
