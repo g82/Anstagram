@@ -14,12 +14,12 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
+import com.google.gson.Gson;
 
 import java.io.IOException;
 import java.util.ArrayList;
 
 import madwhale.g82.com.anstagram_gangnam.api.Api;
-import madwhale.g82.com.anstagram_gangnam.data.DataPostItem;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -32,7 +32,8 @@ import okhttp3.Response;
  */
 public class TimelineFragment extends Fragment {
 
-    ArrayList<DataPostItem> arrayList;
+    ArrayList<Api.Post> arrayList;
+    PostViewAdapter postViewAdapter;
 
     public TimelineFragment() {
         // Required empty public constructor
@@ -48,7 +49,8 @@ public class TimelineFragment extends Fragment {
         View baseView = inflater.inflate(R.layout.fragment_timeline, container, false);
         RecyclerView recyclerView = (RecyclerView) baseView.findViewById(R.id.rv_list);
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity(), LinearLayoutManager.VERTICAL, false));
-        recyclerView.setAdapter(new PostViewAdapter());
+        postViewAdapter = new PostViewAdapter();
+        recyclerView.setAdapter(postViewAdapter);
 
         return baseView;
     }
@@ -59,10 +61,10 @@ public class TimelineFragment extends Fragment {
         fetchPostsTask.execute(Api.GET_POST);
     }
 
-    class FetchPostsTask extends AsyncTask<String, Void, String> {
+    class FetchPostsTask extends AsyncTask<String, Void, Api.Post[]> {
 
         @Override
-        protected String doInBackground(String... strings) {
+        protected Api.Post[] doInBackground(String... strings) {
 
             String url = strings[0];
 
@@ -74,7 +76,11 @@ public class TimelineFragment extends Fragment {
 
             try {
                 Response response = client.newCall(request).execute();
-                return response.body().string();
+
+                Gson gson = new Gson();
+                Api.Post[] posts = gson.fromJson(response.body().charStream(), Api.Post[].class);
+
+                return posts;
 
             } catch (IOException e) {
                 Log.d("FetchPostsTask", e.getMessage());
@@ -83,9 +89,12 @@ public class TimelineFragment extends Fragment {
         }
 
         @Override
-        protected void onPostExecute(String s) {
-            super.onPostExecute(s);
-            Log.d("FetchPostsTask", s);
+        protected void onPostExecute(Api.Post[] posts) {
+            super.onPostExecute(posts);
+            for (Api.Post post : posts) {
+                arrayList.add(post);
+            }
+            postViewAdapter.notifyDataSetChanged();
         }
     }
 
@@ -101,19 +110,19 @@ public class TimelineFragment extends Fragment {
         @Override
         public void onBindViewHolder(PostViewHolder holder, int position) {
 
-            DataPostItem item = arrayList.get(position);
+            Api.Post item = arrayList.get(position);
 
-            String url = item.getPostImgUrl();
+            String url = item.getImage().getUrl();
 
             Glide.with(TimelineFragment.this)
-                    .load(url)
+                    .load(Api.BASE_URL + url)
                     .centerCrop()
                     .crossFade()
                     .into(holder.iv_post);
 
-            holder.tv_username.setText(item.getUserName());
-            holder.tv_posttext.setText(item.getPostText());
-            holder.tv_postlikecount.setText( String.valueOf( item.getPost_likes_count() ) );
+            holder.tv_username.setText(item.getUploader());
+            holder.tv_posttext.setText(item.getText());
+            holder.tv_postlikecount.setText(String.valueOf(item.getLikes()));
         }
 
         @Override
