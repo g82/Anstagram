@@ -1,12 +1,12 @@
 package madwhale.g82.com.anstagram_gangnam;
 
+import android.os.Bundle;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -27,9 +27,10 @@ public class MainActivity extends AppCompatActivity {
         ViewPager viewPager = (ViewPager) findViewById(R.id.vp_pager);
         TabLayout tabLayout = (TabLayout) findViewById(R.id.tl_tabs);
 
-        Fragment[] arrFragments = new Fragment[2];
+        Fragment[] arrFragments = new Fragment[3];
         arrFragments[0] = new TimelineFragment();
         arrFragments[1] = new EmptyFragment();
+        arrFragments[2] = new FriendsFragment();
 
         MainPagerAdapter adapter = new MainPagerAdapter(getSupportFragmentManager(), arrFragments);
 
@@ -54,6 +55,8 @@ public class MainActivity extends AppCompatActivity {
                     return "Timeline";
                 case 1:
                     return "Empty";
+                case 2:
+                    return "Friends";
                 default:
                     return "";
             }
