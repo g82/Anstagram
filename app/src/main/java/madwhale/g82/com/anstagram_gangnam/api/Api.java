@@ -7,7 +7,6 @@ public class Api {
 
     public static final String BASE_URL = "http://52.79.195.156:3000";
     public static final String GET_POST = BASE_URL + "/api/post";
-    public static final String GET_FRIENDS = BASE_URL + "/api/friend";
 
     public static class Image {
         String url;
@@ -71,63 +70,5 @@ public class Api {
 
 
     }
-
-    /** Friends */
-
-    /**
-    {
-        id: 3,
-        name: "woongyi",
-        status: "해체중",
-        image: {
-            url: null
-        },
-        created_at: "2016-05-09T07:16:50.168Z",
-        updated_at: "2016-05-09T07:16:50.168Z"
-    },
-    */
-
-    public static class Friend {
-
-        int id;
-        String name;
-        String status;
-        Image image;
-        String created_at;
-        String updated_at;
-
-        public int getId() {
-            return id;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public String getStatus() {
-            return status;
-        }
-
-        public Image getImage() {
-            return image;
-        }
-
-        public String getCreated_at() {
-            return created_at;
-        }
-
-        public String getUpdated_at() {
-            return updated_at;
-        }
-    }
-
-
-
-
-
-
-
-
-
 
 }
