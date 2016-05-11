@@ -1,6 +1,7 @@
 package madwhale.g82.com.anstagram_gangnam;
 
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -19,6 +20,8 @@ public class MainActivity extends AppCompatActivity {
      *  TimelineFragment, EmptyFragment
      */
 
+    Fragment[] arrFragments;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -27,7 +30,7 @@ public class MainActivity extends AppCompatActivity {
         ViewPager viewPager = (ViewPager) findViewById(R.id.vp_pager);
         TabLayout tabLayout = (TabLayout) findViewById(R.id.tl_tabs);
 
-        Fragment[] arrFragments = new Fragment[2];
+        arrFragments = new Fragment[2];
         arrFragments[0] = new TimelineFragment();
         arrFragments[1] = new EmptyFragment();
 
@@ -35,6 +38,16 @@ public class MainActivity extends AppCompatActivity {
 
         viewPager.setAdapter(adapter);
         tabLayout.setupWithViewPager(viewPager);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        if (requestCode == 2000 && grantResults.length > 0) {
+            TimelineFragment timelineFragment = (TimelineFragment) arrFragments[0];
+            timelineFragment.startCameraActivity();
+        }
     }
 
     class MainPagerAdapter extends FragmentPagerAdapter {

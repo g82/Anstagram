@@ -1,9 +1,16 @@
 package madwhale.g82.com.anstagram_gangnam;
 
 
+import android.Manifest;
+import android.app.Activity;
+import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.provider.MediaStore;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -52,7 +59,49 @@ public class TimelineFragment extends Fragment {
         postViewAdapter = new PostViewAdapter();
         recyclerView.setAdapter(postViewAdapter);
 
+        baseView.findViewById(R.id.fab_post).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                int permissionCheck = ContextCompat.checkSelfPermission(getActivity(),
+                        Manifest.permission.READ_EXTERNAL_STORAGE);
+
+                if (permissionCheck == PackageManager.PERMISSION_GRANTED) {
+                    startCameraActivity();
+                } else {
+                    ActivityCompat.requestPermissions(getActivity(),
+                            new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+                            2000);
+                }
+
+
+            }
+        });
         return baseView;
+    }
+
+    public void startCameraActivity() {
+        Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        if (cameraIntent.resolveActivity(getActivity().getPackageManager()) != null) {
+            startActivityForResult(cameraIntent, 1000);
+        }
+    }
+
+    /**
+     * Main(TimelineFrag) -> run Camera -> main -> Post
+     */
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == 1000 && resultCode == Activity.RESULT_OK) {
+            Log.d("onActivityResult", "Camera SUCCESS");
+            Intent startIntent = new Intent(getActivity(), PostActivity.class);
+            startIntent.setData(data.getData());
+            startActivity(startIntent);
+        }
+
     }
 
     private void fetchAsyncPosts() {
