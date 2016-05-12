@@ -73,9 +73,46 @@ public class PostActivity extends AppCompatActivity {
         ParcelFileDescriptor parcelFileDescriptor =
                 getContentResolver().openFileDescriptor(uri, "r");
         FileDescriptor fileDescriptor = parcelFileDescriptor.getFileDescriptor();
-        Bitmap image = BitmapFactory.decodeFileDescriptor(fileDescriptor);
+
+        // TODO resize
+        BitmapFactory.Options opts = new BitmapFactory.Options();
+        opts.inJustDecodeBounds = true;
+        BitmapFactory.decodeFileDescriptor(fileDescriptor, null, opts);
+
+        //Target 1280 * 720p
+        //Target 720 * 1280
+
+        // 4096x2030
+        int width = opts.outWidth;
+        int height = opts.outHeight;
+
+        final int targetWidth = 1280;
+        final int targetHeight = 1280;
+
+        int ratio = 1;
+        if (width > height) {
+
+            if (width < targetWidth) ratio = 1;
+            else {
+                ratio = width / targetWidth; // 4096/1280
+            }
+        } else {
+
+            if (height < targetHeight) ratio = 1;
+            else {
+                ratio = height / targetHeight;
+            }
+        }
+
+        BitmapFactory.Options newOptions = new BitmapFactory.Options();
+        newOptions.inJustDecodeBounds = false;
+        newOptions.inSampleSize = ratio;
+
+        Bitmap resizedBitmap = BitmapFactory.decodeFileDescriptor(
+                fileDescriptor, null, newOptions);
+
         parcelFileDescriptor.close();
-        return image;
+        return resizedBitmap;
     }
 
     private File createFileFromBitmap(Bitmap bitmap) throws IOException {
