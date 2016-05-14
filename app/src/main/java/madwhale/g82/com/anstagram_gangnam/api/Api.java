@@ -6,7 +6,7 @@ package madwhale.g82.com.anstagram_gangnam.api;
 public class Api {
 
     public static final String BASE_URL = "http://52.79.195.156:3000";
-    public static final String GET_POST = BASE_URL + "/api/post";
+    public static final String GET_POST = BASE_URL + "/api/post?user_id=";
     public static final String UP_POST = BASE_URL + "/api/post";
 
     public static class Image {

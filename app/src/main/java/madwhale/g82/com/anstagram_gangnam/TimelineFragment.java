@@ -3,7 +3,9 @@ package madwhale.g82.com.anstagram_gangnam;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -27,6 +29,7 @@ import com.google.gson.JsonSyntaxException;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.UUID;
 
 import madwhale.g82.com.anstagram_gangnam.api.Api;
 import okhttp3.OkHttpClient;
@@ -35,10 +38,12 @@ import okhttp3.Response;
 
 
 /**
- * 10-C
+ * 10-E
  */
 public class TimelineFragment extends Fragment {
 
+    private static final String PREF_UUID = "PREF_UUID";
+    private static final String PREF_UUID_KEY = "PREF_UUID_KEY";
     ArrayList<Api.Post> arrayList;
     PostViewAdapter postViewAdapter;
 
@@ -106,11 +111,25 @@ public class TimelineFragment extends Fragment {
 
     private void fetchAsyncPosts() {
 
-        String user_id = "g82";
+        SharedPreferences sharedPreferences = getActivity().getSharedPreferences(PREF_UUID, Context.MODE_PRIVATE);
+        String user_id = sharedPreferences.getString(PREF_UUID_KEY, null);
+
+        if (user_id == null) {
+            String uuidStr = UUID.randomUUID().toString();
+            String newId = uuidStr.substring(0, 8);
+            //f5ad365e
+            Log.d("fetchAsyncPosts", newId);
+
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putString(PREF_UUID_KEY, newId);
+            editor.commit();
+        }
+
+        Log.d("fetchAsyncPosts", user_id);
 
         arrayList = new ArrayList<>();
         FetchPostsTask fetchPostsTask = new FetchPostsTask();
-        fetchPostsTask.execute(Api.GET_POST + "?user_id=" + user_id);
+        fetchPostsTask.execute(Api.GET_POST + user_id);
     }
 
     class FetchPostsTask extends AsyncTask<String, Void, Api.Post[]> {
