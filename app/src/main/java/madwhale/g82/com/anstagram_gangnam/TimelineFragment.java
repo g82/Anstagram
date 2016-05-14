@@ -22,6 +22,7 @@ import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -134,12 +135,18 @@ public class TimelineFragment extends Fragment {
             } catch (IOException e) {
                 Log.d("FetchPostsTask", e.getMessage());
                 return null;
+            } catch (JsonSyntaxException e) {
+                Log.d("FetchPostsTask", e.getMessage());
+                return null;
             }
         }
 
         @Override
         protected void onPostExecute(Api.Post[] posts) {
             super.onPostExecute(posts);
+
+            if (posts == null) return;
+
             for (Api.Post post : posts) {
                 arrayList.add(post);
             }
