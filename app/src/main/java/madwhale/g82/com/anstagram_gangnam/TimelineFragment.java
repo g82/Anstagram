@@ -3,9 +3,7 @@ package madwhale.g82.com.anstagram_gangnam;
 
 import android.Manifest;
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -29,11 +27,13 @@ import com.google.gson.JsonSyntaxException;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.UUID;
 
 import madwhale.g82.com.anstagram_gangnam.api.Api;
+import madwhale.g82.com.anstagram_gangnam.uuid.UserUUID;
+import okhttp3.FormBody;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import okhttp3.RequestBody;
 import okhttp3.Response;
 
 
@@ -42,10 +42,11 @@ import okhttp3.Response;
  */
 public class TimelineFragment extends Fragment {
 
-    private static final String PREF_UUID = "PREF_UUID";
-    private static final String PREF_UUID_KEY = "PREF_UUID_KEY";
+
     ArrayList<Api.Post> arrayList;
     PostViewAdapter postViewAdapter;
+
+    private String user_id;
 
     public TimelineFragment() {
         // Required empty public constructor
@@ -54,6 +55,8 @@ public class TimelineFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+
+        user_id = UserUUID.getUserUUID(getActivity());
 
         fetchAsyncPosts();
 
@@ -72,7 +75,8 @@ public class TimelineFragment extends Fragment {
                         Manifest.permission.READ_EXTERNAL_STORAGE);
 
                 if (permissionCheck == PackageManager.PERMISSION_GRANTED) {
-                    startCameraActivity();
+                    //startCameraActivity();
+                    startGallery();
                 } else {
                     ActivityCompat.requestPermissions(getActivity(),
                             new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
@@ -87,6 +91,14 @@ public class TimelineFragment extends Fragment {
 
     public void startCameraActivity() {
         Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        if (cameraIntent.resolveActivity(getActivity().getPackageManager()) != null) {
+            startActivityForResult(cameraIntent, 1000);
+        }
+    }
+
+    public void startGallery() {
+        Intent cameraIntent = new Intent(Intent.ACTION_GET_CONTENT);
+        cameraIntent.setType("image/*");
         if (cameraIntent.resolveActivity(getActivity().getPackageManager()) != null) {
             startActivityForResult(cameraIntent, 1000);
         }
@@ -110,26 +122,14 @@ public class TimelineFragment extends Fragment {
     }
 
     private void fetchAsyncPosts() {
-
-        SharedPreferences sharedPreferences = getActivity().getSharedPreferences(PREF_UUID, Context.MODE_PRIVATE);
-        String user_id = sharedPreferences.getString(PREF_UUID_KEY, null);
-
-        if (user_id == null) {
-            String uuidStr = UUID.randomUUID().toString();
-            String newId = uuidStr.substring(0, 8);
-            //f5ad365e
-            Log.d("fetchAsyncPosts", newId);
-
-            SharedPreferences.Editor editor = sharedPreferences.edit();
-            editor.putString(PREF_UUID_KEY, newId);
-            editor.commit();
-        }
-
-        Log.d("fetchAsyncPosts", user_id);
-
         arrayList = new ArrayList<>();
         FetchPostsTask fetchPostsTask = new FetchPostsTask();
         fetchPostsTask.execute(Api.GET_POST + user_id);
+    }
+
+
+    interface OnLikeListener {
+        void onLike(LikeTaskResponse response);
     }
 
     class FetchPostsTask extends AsyncTask<String, Void, Api.Post[]> {
@@ -209,7 +209,7 @@ public class TimelineFragment extends Fragment {
         }
     }
 
-    class PostViewHolder extends RecyclerView.ViewHolder {
+    class PostViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
         public TextView tv_username, tv_postlikecount, tv_posttext;
         public ImageView iv_post;
@@ -222,7 +222,127 @@ public class TimelineFragment extends Fragment {
             tv_postlikecount = (TextView) itemView.findViewById(R.id.tv_like_count);
             tv_posttext = (TextView) itemView.findViewById(R.id.tv_post_text);
             chk_like = (CheckBox) itemView.findViewById(R.id.chk_like);
+            chk_like.setOnClickListener(this);
+        }
 
+        @Override
+        public void onClick(View view) {
+            final int position = getLayoutPosition();
+
+            Api.Post post = arrayList.get(position);
+
+            Log.d("Like", post.getLikes().isUserliked() + "/" + post.getId() + "/" + user_id);
+
+            boolean like = !(post.getLikes().isUserliked());
+
+            LikeTaskRequest likeTaskRequest = new LikeTaskRequest(like, post.getId(), user_id);
+            LikeTask likeTask = new LikeTask(new OnLikeListener() {
+                @Override
+                public void onLike(LikeTaskResponse response) {
+                    Api.Post post = arrayList.get(position);
+                    post.getLikes().setCount(response.getLikes());
+                    post.getLikes().setUserliked(response.isResult());
+                    postViewAdapter.notifyDataSetChanged();
+                }
+            });
+            likeTask.execute(likeTaskRequest);
+        }
+    }
+
+    class LikeTaskRequest {
+
+        boolean like;
+        int post_id;
+        String user_id;
+
+        public LikeTaskRequest(boolean like, int post_id, String user_id) {
+            this.like = like;
+            this.post_id = post_id;
+            this.user_id = user_id;
+        }
+
+        public boolean isLike() {
+            return like;
+        }
+
+        public int getPost_id() {
+            return post_id;
+        }
+
+        public String getUser_id() {
+            return user_id;
+        }
+    }
+
+    class LikeTaskResponse {
+        boolean result;
+        int likes;
+
+        public boolean isResult() {
+            return result;
+        }
+
+        public int getLikes() {
+            return likes;
+        }
+    }
+
+    class LikeTask extends AsyncTask<LikeTaskRequest, Void, LikeTaskResponse> {
+
+        private OnLikeListener onLikeListener;
+
+        public LikeTask(OnLikeListener onLikeListener) {
+            this.onLikeListener = onLikeListener;
+        }
+
+        @Override
+        protected LikeTaskResponse doInBackground(LikeTaskRequest... likeTaskRequests) {
+
+            LikeTaskRequest likeInfo = likeTaskRequests[0];
+
+            RequestBody requestBody = new FormBody.Builder()
+                    .add("post_id", String.valueOf(likeInfo.getPost_id()))
+                    .add("user_id", likeInfo.getUser_id())
+                    .build();
+
+            Request request;
+
+            if (likeInfo.isLike()) {
+                request = new Request.Builder()
+                        .url(Api.POST_LIKE)
+                        .post(requestBody)
+                        .build();
+            } else {
+                request = new Request.Builder()
+                        .url(Api.DEL_LIKE)
+                        .delete(requestBody)
+                        .build();
+            }
+
+            OkHttpClient okHttpClient = new OkHttpClient();
+
+            try {
+                Response response = okHttpClient.newCall(request).execute();
+
+                if (response.code() == 200) {
+                    Gson gson = new Gson();
+                    LikeTaskResponse taskResponse = gson.fromJson(response.body().charStream(), LikeTaskResponse.class);
+                    return taskResponse;
+                } else {
+                    return null;
+                }
+
+            } catch (IOException e) {
+                Log.d("LikeTask", "Error", e);
+                return null;
+            }
+        }
+
+        @Override
+        protected void onPostExecute(LikeTaskResponse likeTaskResponse) {
+            super.onPostExecute(likeTaskResponse);
+            onLikeListener.onLike(likeTaskResponse);
+            Log.d("Like Response", likeTaskResponse.getLikes() + "/" + likeTaskResponse.isResult());
         }
     }
 

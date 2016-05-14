@@ -26,6 +26,7 @@ import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 import madwhale.g82.com.anstagram_gangnam.api.Api;
+import madwhale.g82.com.anstagram_gangnam.uuid.UserUUID;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.OkHttpClient;
@@ -163,7 +164,7 @@ public class PostActivity extends AppCompatActivity {
                 /** HTTP POST */
                 RequestBody requestBody = new MultipartBody.Builder()
                         .setType(MultipartBody.FORM)
-                        .addFormDataPart("uploader", "g82")
+                        .addFormDataPart("uploader", UserUUID.getUserUUID(PostActivity.this))
                         .addFormDataPart("text", text)
                         .addFormDataPart("image", makeImageFileName(),
                                 RequestBody.create(MediaType.parse("image/png"), imageFile))

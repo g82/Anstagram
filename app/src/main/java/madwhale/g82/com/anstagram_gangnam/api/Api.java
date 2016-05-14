@@ -8,6 +8,8 @@ public class Api {
     public static final String BASE_URL = "http://52.79.195.156:3000";
     public static final String GET_POST = BASE_URL + "/api/post?user_id=";
     public static final String UP_POST = BASE_URL + "/api/post";
+    public static final String POST_LIKE = BASE_URL + "/api/post/like";
+    public static final String DEL_LIKE = BASE_URL + "/api/post/like";
 
     public static class Image {
         String url;
@@ -25,8 +27,16 @@ public class Api {
             return count;
         }
 
+        public void setCount(int count) {
+            this.count = count;
+        }
+
         public boolean isUserliked() {
             return userliked;
+        }
+
+        public void setUserliked(boolean userliked) {
+            this.userliked = userliked;
         }
     }
 
