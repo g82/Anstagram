@@ -17,6 +17,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CheckBox;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -34,9 +35,7 @@ import okhttp3.Response;
 
 
 /**
- * 8-C
- * https://goo.gl/91iKsb
- *
+ * 10-C
  */
 public class TimelineFragment extends Fragment {
 
@@ -106,9 +105,12 @@ public class TimelineFragment extends Fragment {
     }
 
     private void fetchAsyncPosts() {
+
+        String user_id = "g82";
+
         arrayList = new ArrayList<>();
         FetchPostsTask fetchPostsTask = new FetchPostsTask();
-        fetchPostsTask.execute(Api.GET_POST);
+        fetchPostsTask.execute(Api.GET_POST + "?user_id=" + user_id);
     }
 
     class FetchPostsTask extends AsyncTask<String, Void, Api.Post[]> {
@@ -178,7 +180,8 @@ public class TimelineFragment extends Fragment {
 
             holder.tv_username.setText(item.getUploader());
             holder.tv_posttext.setText(item.getText());
-            holder.tv_postlikecount.setText(String.valueOf(item.getLikes()));
+            holder.tv_postlikecount.setText(String.valueOf(item.getLikes().getCount()));
+            holder.chk_like.setChecked(item.getLikes().isUserliked());
         }
 
         @Override
@@ -191,6 +194,7 @@ public class TimelineFragment extends Fragment {
 
         public TextView tv_username, tv_postlikecount, tv_posttext;
         public ImageView iv_post;
+        public CheckBox chk_like;
 
         public PostViewHolder(View itemView) {
             super(itemView);
@@ -198,6 +202,7 @@ public class TimelineFragment extends Fragment {
             tv_username = (TextView) itemView.findViewById(R.id.tv_user_nickname);
             tv_postlikecount = (TextView) itemView.findViewById(R.id.tv_like_count);
             tv_posttext = (TextView) itemView.findViewById(R.id.tv_post_text);
+            chk_like = (CheckBox) itemView.findViewById(R.id.chk_like);
 
         }
     }

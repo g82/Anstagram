@@ -17,18 +17,35 @@ public class Api {
         }
     }
 
+    public static class Likes {
+        int count;
+        boolean userliked;
+
+        public int getCount() {
+            return count;
+        }
+
+        public boolean isUserliked() {
+            return userliked;
+        }
+    }
+
     /**
+     *
      * {
-     * "id": 1,
-     * "uploader": "g82",
-     * "text": "현영아...",
-     * "likes": 0,
-     * "created_at": "2016-05-05T07:27:35.962Z",
-     * "updated_at": "2016-05-05T07:27:35.962Z",
-     * "image": {
-     * "url": "/uploads/post/image/1/IMG_6940.jpg"
-     * }
-     * }
+     "id": 48,
+     "uploader": "g82",
+     "text": "하이하이",
+     "likes": {
+     "count": 0,
+     "userliked": false
+     },
+     "image": {
+     "url": "https://bucket-anstagram.s3.ap-northeast-2.amazonaws.com/uploads/post/image/48/20160514_071342.png"
+     },
+     "created_at": "2016-05-14T10:13:46.997Z",
+     "updated_at": "2016-05-14T10:13:46.997Z"
+     }
      */
 
     public static class Post {
@@ -36,7 +53,7 @@ public class Api {
         int id;
         String uploader;
         String text;
-        int likes;
+        Likes likes;
         String created_at;
         String updated_at;
         Image image;
@@ -53,7 +70,7 @@ public class Api {
             return text;
         }
 
-        public int getLikes() {
+        public Likes getLikes() {
             return likes;
         }
 
