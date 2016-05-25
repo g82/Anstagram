@@ -122,7 +122,7 @@ public class TimelineFragment extends Fragment {
 
             holder.tv_username.setText(item.getUploader());
             holder.tv_posttext.setText(item.getText());
-            holder.tv_postlikecount.setText(String.valueOf(item.getLikes()));
+            holder.tv_postlikecount.setText(String.valueOf(item.getLikes().getCount()));
         }
 
         @Override

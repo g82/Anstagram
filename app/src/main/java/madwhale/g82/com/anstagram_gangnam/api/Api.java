@@ -7,6 +7,7 @@ public class Api {
 
     public static final String BASE_URL = "http://52.79.195.156:3000";
     public static final String GET_POST = BASE_URL + "/api/post";
+    public static final String GET_FRIENDS = BASE_URL + "/api/friend";
 
     public static class Image {
         String url;
@@ -17,17 +18,20 @@ public class Api {
     }
 
     /**
-     * {
-     * "id": 1,
-     * "uploader": "g82",
-     * "text": "현영아...",
-     * "likes": 0,
-     * "created_at": "2016-05-05T07:27:35.962Z",
-     * "updated_at": "2016-05-05T07:27:35.962Z",
-     * "image": {
-     * "url": "/uploads/post/image/1/IMG_6940.jpg"
-     * }
-     * }
+     {
+     "id": 53,
+     "uploader": "ㅈㅅ",
+     "text": "ㅈ",
+     "likes": {
+     "count": 50,
+     "userliked": false
+     },
+     "image": {
+     "url": "https://bucket-anstagram.s3.ap-northeast-2.amazonaws.com/uploads/post/image/53/20160515_062644.png"
+     },
+     "created_at": "2016-05-15T09:26:46.081Z",
+     "updated_at": "2016-05-22T08:19:36.248Z"
+     }
      */
 
     public static class Post {
@@ -35,10 +39,11 @@ public class Api {
         int id;
         String uploader;
         String text;
-        int likes;
+
         String created_at;
         String updated_at;
         Image image;
+        Likes likes;
 
         public int getId() {
             return id;
@@ -50,10 +55,6 @@ public class Api {
 
         public String getText() {
             return text;
-        }
-
-        public int getLikes() {
-            return likes;
         }
 
         public String getCreated_at() {
@@ -68,6 +69,22 @@ public class Api {
             return image;
         }
 
+        public Likes getLikes() {
+            return likes;
+        }
+
+        public class Likes {
+            int count;
+            boolean userliked;
+
+            public int getCount() {
+                return count;
+            }
+
+            public boolean isUserliked() {
+                return userliked;
+            }
+        }
 
     }
 
