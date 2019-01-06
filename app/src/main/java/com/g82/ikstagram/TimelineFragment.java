@@ -1,4 +1,4 @@
-package madwhale.g82.com.anstagram_gangnam;
+package com.g82.ikstagram;
 
 
 import android.Manifest;
@@ -8,6 +8,7 @@ import android.content.pm.PackageManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
@@ -22,14 +23,19 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 
 import java.io.IOException;
 import java.util.ArrayList;
 
-import madwhale.g82.com.anstagram_gangnam.api.Api;
-import madwhale.g82.com.anstagram_gangnam.uuid.UserUUID;
+import com.g82.ikstagram.api.Api;
+import com.g82.ikstagram.uuid.UserUUID;
 import okhttp3.FormBody;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -57,8 +63,10 @@ public class TimelineFragment extends Fragment {
                              Bundle savedInstanceState) {
 
         user_id = UserUUID.getUserUUID(getActivity());
+        arrayList = new ArrayList<>();
 
-        fetchAsyncPosts();
+        //fetchAsyncPosts();
+        fetchPostsFromFB();
 
         // Inflate the layout for this fragment
         View baseView = inflater.inflate(R.layout.fragment_timeline, container, false);
@@ -122,9 +130,33 @@ public class TimelineFragment extends Fragment {
     }
 
     private void fetchAsyncPosts() {
-        arrayList = new ArrayList<>();
+
         FetchPostsTask fetchPostsTask = new FetchPostsTask();
         fetchPostsTask.execute(Api.GET_POST + user_id);
+    }
+
+    private void fetchPostsFromFB() {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+        db.collection("posts")
+                .get()
+                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+
+                        if (task.isSuccessful()) {
+                            //Success!
+                            for (QueryDocumentSnapshot document : task.getResult()) {
+                                Api.Post post = document.toObject(Api.Post.class);
+                                arrayList.add(post);
+                            }
+                            postViewAdapter.notifyDataSetChanged();
+                        }
+                        else {
+                            Log.w("FBFirestore", "Error getting documents.", task.getException());
+                        }
+                    }
+                });
     }
 
 
@@ -189,7 +221,7 @@ public class TimelineFragment extends Fragment {
 
             Api.Post item = arrayList.get(position);
 
-            String url = item.getImage().getUrl();
+            String url = item.getImageUrl();
 
             Glide.with(TimelineFragment.this)
                     .load(url)

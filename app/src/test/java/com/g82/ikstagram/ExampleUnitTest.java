@@ -1,4 +1,4 @@
-package madwhale.g82.com.anstagram_gangnam;
+package com.g82.ikstagram;
 
 import org.junit.Test;
 

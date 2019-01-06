@@ -1,4 +1,6 @@
-package madwhale.g82.com.anstagram_gangnam.api;
+package com.g82.ikstagram.api;
+
+import java.util.Date;
 
 /**
  * Created by g82 on 5/6/16.
@@ -13,13 +15,13 @@ public class Api {
     public static final String POST_LIKE = BASE_URL + "/api/post/like";
     public static final String DEL_LIKE = BASE_URL + "/api/post/like";
 
-    public static class Image {
-        String url;
-
-        public String getUrl() {
-            return url;
-        }
-    }
+//    public static class Image {
+//        String url;
+//
+//        public String getUrl() {
+//            return url;
+//        }
+//    }
 
     public static class Likes {
         int count;
@@ -66,9 +68,10 @@ public class Api {
         String uploader;
         String text;
         Likes likes;
-        String created_at;
-        String updated_at;
-        Image image;
+        Date created_at;
+        Date updated_at;
+        //Image image;
+        String imageUrl;
 
         public int getId() {
             return id;
@@ -86,19 +89,17 @@ public class Api {
             return likes;
         }
 
-        public String getCreated_at() {
+        public Date getCreated_at() {
             return created_at;
         }
 
-        public String getUpdated_at() {
+        public Date getUpdated_at() {
             return updated_at;
         }
 
-        public Image getImage() {
-            return image;
+        public String getImageUrl() {
+            return imageUrl;
         }
-
-
     }
 
 }

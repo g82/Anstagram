@@ -1,4 +1,4 @@
-package madwhale.g82.com.anstagram_gangnam;
+package com.g82.ikstagram;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
@@ -25,8 +25,8 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
-import madwhale.g82.com.anstagram_gangnam.api.Api;
-import madwhale.g82.com.anstagram_gangnam.uuid.UserUUID;
+import com.g82.ikstagram.api.Api;
+import com.g82.ikstagram.uuid.UserUUID;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.OkHttpClient;

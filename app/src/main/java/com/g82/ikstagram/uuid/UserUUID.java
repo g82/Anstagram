@@ -1,4 +1,4 @@
-package madwhale.g82.com.anstagram_gangnam.uuid;
+package com.g82.ikstagram.uuid;
 
 import android.app.Activity;
 import android.content.Context;
