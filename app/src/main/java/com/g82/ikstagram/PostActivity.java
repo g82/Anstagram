@@ -8,6 +8,7 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.ParcelFileDescriptor;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -23,10 +24,16 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import com.g82.ikstagram.api.Api;
 import com.g82.ikstagram.uuid.UserUUID;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.firestore.FirebaseFirestore;
+
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.OkHttpClient;
@@ -51,7 +58,8 @@ public class PostActivity extends AppCompatActivity {
         findViewById(R.id.btn_post).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                post(photoUri.toString(), etText.getText().toString());
+                //post(photoUri.toString(), etText.getText().toString());
+                postToFB(photoUri.toString(), etText.getText().toString());
             }
         });
 
@@ -69,6 +77,45 @@ public class PostActivity extends AppCompatActivity {
         PostTask postTask = new PostTask();
         postTask.execute(uriString, textString);
     }
+
+    private void postToFB(String uriString, String textString) {
+
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+        Map<String, Object> post = new HashMap<>();
+        post.put("uploader", UserUUID.getUserUUID(this));
+        post.put("text", textString);
+        post.put("imageUrl", "https://s3.namuwikiusercontent.com/s/eb28f843acd0e0db2ab913d5175cb84d1d081b7660e5ce878a9a779e4775390eb81fe5d85354f0ad48c2e6dce61b1cecdcd6aba4df2e1ea256db7d862cd9da8702710ac5eb75b1be952ba630ef0cd7b6f76c03f2acd982bfb343e6fb929606c5");
+        post.put("created_at", new Date());
+        post.put("updated_at", new Date());
+        post.put("id", -1);
+
+        Map<String, Object> likeMap = new HashMap<>();
+        likeMap.put("count" , 20);
+        likeMap.put("userliked", false);
+
+        post.put("likes", likeMap);
+
+
+
+        db.collection("posts").document()
+                .set(post)
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        //성공!
+                        Log.d("Firestore", "DocumentSnapshot successfully written!");
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        //실패!
+                        Log.w("Firestore", "Error writing document", e);
+                    }
+                });
+    }
+
 
     private Bitmap getBitmapFromUri(Uri uri) throws IOException {
         ParcelFileDescriptor parcelFileDescriptor =
