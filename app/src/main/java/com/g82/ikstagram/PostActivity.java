@@ -30,9 +30,17 @@ import java.util.concurrent.TimeUnit;
 
 import com.g82.ikstagram.api.Api;
 import com.g82.ikstagram.uuid.UserUUID;
+import com.google.android.gms.tasks.Continuation;
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.SetOptions;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
@@ -78,14 +86,22 @@ public class PostActivity extends AppCompatActivity {
         postTask.execute(uriString, textString);
     }
 
-    private void postToFB(String uriString, String textString) {
+    private void postToFB(final String uriString, final String textString) {
+
+        /*
+        TODO
+        0.포스트 문서를 만들어서 ID를 발급받는다.
+        1.이미지를 올린다. storage//81164xxx/PDLrzsxvxcv(.jpg)
+        2.이미지 url 주소를 제공받아서
+        3.포스트 도큐먼트(DB)에 이미지 주소를 업데이트 한다.
+         */
 
         FirebaseFirestore db = FirebaseFirestore.getInstance();
 
         Map<String, Object> post = new HashMap<>();
         post.put("uploader", UserUUID.getUserUUID(this));
         post.put("text", textString);
-        post.put("imageUrl", "https://s3.namuwikiusercontent.com/s/eb28f843acd0e0db2ab913d5175cb84d1d081b7660e5ce878a9a779e4775390eb81fe5d85354f0ad48c2e6dce61b1cecdcd6aba4df2e1ea256db7d862cd9da8702710ac5eb75b1be952ba630ef0cd7b6f76c03f2acd982bfb343e6fb929606c5");
+
         post.put("created_at", new Date());
         post.put("updated_at", new Date());
         post.put("id", -1);
@@ -97,9 +113,59 @@ public class PostActivity extends AppCompatActivity {
         post.put("likes", likeMap);
 
 
+        db.collection("posts")
+                .add(post).addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+            @Override
+            public void onSuccess(DocumentReference documentReference) {
+                final String docuId = documentReference.getId();
 
-        db.collection("posts").document()
-                .set(post)
+                FirebaseStorage storage = FirebaseStorage.getInstance();
+                StorageReference storageRef = storage.getReference();
+
+                //storage//81164xxx/PDLrzsxvxcv(.jpg)
+                final StorageReference imageRef =
+                        storageRef.child(UserUUID.getUserUUID(PostActivity.this) + "/" + docuId);
+
+                try {
+                    Bitmap bitmap = getBitmapFromUri(Uri.parse(uriString));
+                    File imageFile = createFileFromBitmap(bitmap);
+
+                    Uri file = Uri.fromFile(imageFile);
+
+                    UploadTask uploadTask = imageRef.putFile(file);
+
+                    Task<Uri> urlTask = uploadTask.continueWithTask(new Continuation<UploadTask.TaskSnapshot, Task<Uri>>() {
+                        @Override
+                        public Task<Uri> then(@NonNull Task<UploadTask.TaskSnapshot> task) throws Exception {
+                            if (!task.isSuccessful()) {
+                                throw task.getException();
+                            }
+                            return imageRef.getDownloadUrl();
+                        }
+                    }).addOnCompleteListener(new OnCompleteListener<Uri>() {
+                        @Override
+                        public void onComplete(@NonNull Task<Uri> task) {
+                            Uri downloadUri = task.getResult();
+                            UpdatePostImage(docuId, downloadUri, textString);
+                        }
+                    });
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+            }
+        });
+    }
+
+    private void UpdatePostImage(String documentId, Uri imageUri, String textString) {
+
+        Map<String, Object> post = new HashMap<>();
+        post.put("imageUrl", imageUri.toString());
+
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+        db.collection("posts").document(documentId)
+                .set(post, SetOptions.merge())
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
                     public void onSuccess(Void aVoid) {
